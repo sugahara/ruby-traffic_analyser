@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 require 'pcap'
 require './anomaly-logger.rb'
-require 'mysql'
+#require 'mysql'
 include DataHandler
 
 class Logger

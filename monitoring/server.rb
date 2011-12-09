@@ -3,7 +3,7 @@ require 'pcap'
 require './handler.rb'
 require './cap-data.rb'
 require './logger.rb'
-require 'mysql'
+#require 'mysql'
 
 include DataHandler
 

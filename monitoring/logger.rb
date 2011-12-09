@@ -10,7 +10,7 @@ class Logger
     @dumper = Hash.new
     @anomaly_logger = Hash.new
     @anomaly_logger_args = Array.new
-    @db = Mysql::new("127.0.0.1","ruby","suga","ruby")
+    # @db = Mysql::new("127.0.0.1","ruby","suga","ruby")
     @table_name = @data.start_time.strftime("%Y%m%d-%H%M%S")
   end
 
@@ -35,7 +35,7 @@ class Logger
     @table_name = @data.start_time.strftime("%Y%m%d-%H%M%S")
     @anomaly_logger[protocol] = AnomalyLogger.new(protocol, range, mu)
     sql = "CREATE TABLE `ruby`.`#{@table_name}` (`number` INT NOT NULL DEFAULT NULL AUTO_INCREMENT PRIMARY KEY ,`time` DATETIME NOT NULL ,`l4_protocol` TEXT DEFAULT NULL ,`protocol` TEXT DEFAULT NULL ,`source_ip` INT UNSIGNED NOT NULL ,`destination_ip` INT UNSIGNED NOT NULL ,`source_port` INT NOT NULL ,`destination_port` INT NOT NULL ,`length` INT NOT NULL ,`data` LONGBLOB) ENGINE = MYISAM ;"
-    @db.query(sql)
+    # @db.query(sql)
   end
 
   def out #output line
@@ -132,7 +132,7 @@ class Logger
       data = pkt.udp_data
     end
     sql = "INSERT INTO `#{@table_name}` (`number` ,`time` ,`source_ip` ,`destination_ip` ,`source_port` ,`destination_port` ,`length`, `data`)VALUES (NULL , '#{time}', '#{src_ip}', '#{dst_ip}', '#{src_port}', '#{dst_port}', '#{length}', NULL)"
-    @db.query(sql)
+    # @db.query(sql)
   end
 
   

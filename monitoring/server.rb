@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'eventmachine'
 require 'pcap'
 require './handler.rb'
@@ -7,7 +8,12 @@ require './logger.rb'
 
 include DataHandler
 
-CAPTURE_DEVICE = "en2"
+if ARGV[0].nil?
+  puts "ERROR:キャプチャデバイスを指定してください．"
+  exit
+end
+
+CAPTURE_DEVICE = ARGV[0]
 WINDOW_TIME = 5.0
 
 @data = CapData.new(["tcp", "udp"], CAPTURE_DEVICE, Time.now, WINDOW_TIME)

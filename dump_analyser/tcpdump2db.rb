@@ -21,7 +21,7 @@ sql = "CREATE TABLE `tcpdump`.`#{@table_name}_sub` (`number` INT NOT NULL DEFAUL
 
 
 result = `tshark -r #{@filename} -T fields -e frame.time -e frame.protocols -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e frame.len -E separator=\\;`
-print result
+
 lines = result.rstrip.split(/\r?\n/).map {|line| line.chomp }
 
 lines.each do |line|

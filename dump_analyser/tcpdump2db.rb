@@ -16,7 +16,7 @@ require 'mysql'
 
 @filename = ARGV[0]
 
-sql = "CREATE TABLE `tcpdump`.`#{@table_name}_sub` (`number` INT NOT NULL DEFAULT NULL AUTO_INCREMENT PRIMARY KEY ,`time` DATETIME NOT NULL ,`protocol_1` TEXT DEFAULT NULL ,`protocol_2` TEXT DEFAULT NULL ,`protocol_3` TEXT DEFAULT NULL ,`protocol_4` TEXT DEFAULT NULL ,`eth_src` TEXT DEFAULT NULL ,`eth_dst` TEXT DEFAULT NULL , `ip_src` INT UNSIGNED DEFAULT NULL ,`ip_dst` INT UNSIGNED DEFAULT NULL ,`tcp_srcport` INT DEFAULT NULL ,`tcp_dstport` INT DEFAULT NULL ,`udp_srcport` INT DEFAULT NULL,`udp_dstport` INT DEFAULT NULL, `length` INT DEFAULT NULL) ENGINE = MYISAM"
+sql = "CREATE TABLE `tcpdump`.`#{@table_name}` (`number` INT NOT NULL DEFAULT NULL AUTO_INCREMENT PRIMARY KEY ,`time` DATETIME NOT NULL ,`protocol_1` TEXT DEFAULT NULL ,`protocol_2` TEXT DEFAULT NULL ,`protocol_3` TEXT DEFAULT NULL ,`protocol_4` TEXT DEFAULT NULL ,`eth_src` TEXT DEFAULT NULL ,`eth_dst` TEXT DEFAULT NULL , `ip_src` INT UNSIGNED DEFAULT NULL ,`ip_dst` INT UNSIGNED DEFAULT NULL ,`tcp_srcport` INT DEFAULT NULL ,`tcp_dstport` INT DEFAULT NULL ,`udp_srcport` INT DEFAULT NULL,`udp_dstport` INT DEFAULT NULL, `length` INT DEFAULT NULL) ENGINE = MYISAM"
 @db.query(sql)
 
 
@@ -59,7 +59,7 @@ lines.each do |line|
     "udp_dstport" => frame_prop[9],
     "length" => length
   }
-  sql = "INSERT INTO `#{@table_name}_sub` ("
+  sql = "INSERT INTO `#{@table_name}` ("
   cnt = 0
   sql_insert.each do |key, value|
     if value != "" && value != nil

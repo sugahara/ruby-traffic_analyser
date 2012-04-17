@@ -11,20 +11,31 @@ require 'mysql'
 #pass = $stdin.gets.chop
 #system "stty echo"
 
+# Mysql init set
 @db = Mysql::new(ARGV[1],"ruby","suga0329","tcpdump")
+
+
 @table_name = File::basename(ARGV[0])
-
 @filename = ARGV[0]
+@dirname = File.dirname(ARGV[0])
 
+# create table
 sql = "CREATE TABLE `tcpdump`.`#{@table_name}` (`number` INT NOT NULL DEFAULT NULL AUTO_INCREMENT PRIMARY KEY ,`time` DATETIME NOT NULL ,`protocol_1` TEXT DEFAULT NULL ,`protocol_2` TEXT DEFAULT NULL ,`protocol_3` TEXT DEFAULT NULL ,`protocol_4` TEXT DEFAULT NULL ,`eth_src` TEXT DEFAULT NULL ,`eth_dst` TEXT DEFAULT NULL , `ip_src` INT UNSIGNED DEFAULT NULL ,`ip_dst` INT UNSIGNED DEFAULT NULL ,`tcp_srcport` INT DEFAULT NULL ,`tcp_dstport` INT DEFAULT NULL ,`udp_srcport` INT DEFAULT NULL,`udp_dstport` INT DEFAULT NULL, `length` INT DEFAULT NULL) ENGINE = MYISAM"
 @db.query(sql)
 
+# run tshark from file and change output fields, store output to result
+#`tshark -r #{@filename} -T fields -e frame.time -e frame.protocols -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e frame.len -E separator=\\; > #{@dirname}/temp.txt;`
 
-result = `tshark -r #{@filename} -T fields -e frame.time -e frame.protocols -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e frame.len -E separator=\\;`
+file = File.open("#{@dirname}/temp.txt", 'r')
 
-lines = result.rstrip.split(/\r?\n/).map {|line| line.chomp }
+# get header info from lines
+line_cnt = 1
+sql = "INSERT INTO `#{@table_name}` VALUES"
+start_time=Time.new
 
-lines.each do |line|
+while line = file.gets
+  line_cnt += 1
+  line = line.chomp
   frame_prop = line.split(";")
   month = frame_prop[0].split(",")[0].split(" ")[0]#後回し
   day = frame_prop[0].split(",")[0].split(" ")[1]
@@ -59,36 +70,45 @@ lines.each do |line|
     "udp_dstport" => frame_prop[9],
     "length" => length
   }
-  sql = "INSERT INTO `#{@table_name}` ("
-  cnt = 0
+  
+  
+  sql += "(NULL, "
+  value_cnt = 0
   sql_insert.each do |key, value|
     if value != "" && value != nil
-      sql += ", " if cnt != 0
-      sql += "`#{key}`"
-      cnt +=1
-    end
-  end
-  sql += ")VALUES ("
-  cnt = 0
-  sql_insert.each do |key, value|
-    if value != "" && value != nil
-      sql += ", " if cnt != 0
+      sql += ", " if value_cnt != 0
       if key.index("ip_")
         sql += "INET_ATON(\"#{value}\")"
+        value_cnt += 1
       else
         sql += "'#{value}'"
+        value_cnt += 1
       end
-      cnt +=1
+    else 
+      sql += ", " if value_cnt != 0
+      sql += "NULL"
+      value_cnt += 1
     end
   end
   sql += ")"
-  p sql
-  #sql = "INSERT INTO `#{@table_name}` (`number` ,`time` ,`protocol` ,`source_ip` ,`destination_ip` ,`source_port` ,`destination_port` ,`length`)VALUES (NULL , '#{time}', 'tcp','#{src_ip}', '#{dst_ip}', '#{src_port}', '#{dst_port}', '#{length}')"
-  #sql = "INSERT INTO `#{@table_name}` (`time` ,`protocol_1`, `protocol_2` , `protocol_3, `protocol_4`, `eth_src`, `eth_dst`, `ip_src`, `ip_dst`, `tcp_srcport`, `tcp_dstport`, `udp_srcport`, `udp_dstport`, `length`)VALUES ('#{frame_time}', '#{frame_protocols[0]}', '#{frame_protocols[1]}', '#{frame_protocols[2]}', '#{frame_protocols[3]}', '#{eth_src}', '#{eth_dst}', '#{ip_src}', '#{ip_dst}', '#{tcp_srcport}', '#{tcp_dstport}', '#{udp_srcport}', '#{udp_dstport}', '#{frame_len}')"
+  #p sql
+  if line_cnt > 100
+    #p sql
+    @db.query(sql)
+    sql = "INSERT INTO `#{@table_name}` VALUES"
+    line_cnt = 1
+  else
+    sql += ","
+  end
+end
+if sql[sql.size-1] == ","
+  sql = sql.chop 
   @db.query(sql)
 end
 
+end_time = Time.new
 
+p end_time - start_time
 
 #cap = Pcap::Capture.open_offline(ARGV[0])
 

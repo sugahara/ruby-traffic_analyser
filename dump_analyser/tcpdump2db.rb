@@ -54,18 +54,16 @@ end
 
 # create table
 sql = "CREATE TABLE `tcpdump`.`#{@table_name}` (`number` INT NOT NULL DEFAULT NULL AUTO_INCREMENT PRIMARY KEY ,`time` DATETIME NOT NULL ,`micro_second` INT NOT NULL,`protocol_1` TEXT DEFAULT NULL ,`protocol_2` TEXT DEFAULT NULL ,`protocol_3` TEXT DEFAULT NULL ,`protocol_4` TEXT DEFAULT NULL ,`eth_src` TEXT DEFAULT NULL ,`eth_dst` TEXT DEFAULT NULL , `ip_src` TEXT DEFAULT NULL ,`ip_dst` TEXT DEFAULT NULL ,`tcp_srcport` INT DEFAULT NULL ,`tcp_dstport` INT DEFAULT NULL ,`udp_srcport` INT DEFAULT NULL,`udp_dstport` INT DEFAULT NULL, `length` INT DEFAULT NULL) ENGINE = MYISAM"
-#@db.query(sql)
+@db.query(sql)
 
 # run tshark from file and change output fields, store output to result
-`tshark -r #{@filename} -T fields -e frame.time -e frame.protocols -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e frame.len -E separator=\\; > #{@dirname}/temp.txt;`
-# result = `tshark -r #{@filename} -T fields -e frame.time -e frame.protocols -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e frame.len -E separator=\\;`
-
-file = File.open("#{@dirname}/temp.txt", 'r')
-
+# `tshark -r #{@filename} -T fields -e frame.time -e frame.protocols -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e frame.len -E separator=\\; > #{@dirname}/temp.txt;`
+result = `tshark -r #{@filename} -T fields -e frame.time -e frame.protocols -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e frame.len -E separator=\\;`
+header_start = Time.new
+lines = result.rstrip.split(/\r?\n/).map {|line| line.chomp }
 # get header info from lines
-start_time=Time.new
 file_csv = File.open("#{@dirname}/data.csv",'w')
-while line = file.gets
+lines.each do |line|
   header = get_header(line)
   csv_line = 'NULL,'
   header.each do |key,value|
@@ -80,7 +78,10 @@ while line = file.gets
 end
 
 file_csv.close
-
-
+header_end = Time.new
+p header_end - header_start
 sql = "LOAD DATA LOCAL INFILE '#{@dirname}/data.csv' INTO TABLE `#{@table_name}` FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\\n'"
 @db.query(sql)
+end_time = Time.new
+
+p end_time - header_start

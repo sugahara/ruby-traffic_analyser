@@ -52,13 +52,17 @@ end
 @filename = ARGV[0]
 @dirname = File.dirname(ARGV[0])
 
+total_start = Time.new
 # create table
 sql = "CREATE TABLE `tcpdump`.`#{@table_name}` (`number` INT NOT NULL DEFAULT NULL AUTO_INCREMENT PRIMARY KEY ,`time` DATETIME NOT NULL ,`micro_second` INT NOT NULL,`protocol_1` TEXT DEFAULT NULL ,`protocol_2` TEXT DEFAULT NULL ,`protocol_3` TEXT DEFAULT NULL ,`protocol_4` TEXT DEFAULT NULL ,`eth_src` TEXT DEFAULT NULL ,`eth_dst` TEXT DEFAULT NULL , `ip_src` TEXT DEFAULT NULL ,`ip_dst` TEXT DEFAULT NULL ,`tcp_srcport` INT DEFAULT NULL ,`tcp_dstport` INT DEFAULT NULL ,`udp_srcport` INT DEFAULT NULL,`udp_dstport` INT DEFAULT NULL, `length` INT DEFAULT NULL) ENGINE = MYISAM"
 @db.query(sql)
 
 # run tshark from file and change output fields, store output to result
 # `tshark -r #{@filename} -T fields -e frame.time -e frame.protocols -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e frame.len -E separator=\\; > #{@dirname}/temp.txt;`
+puts "tshark_start"
 result = `tshark -r #{@filename} -T fields -e frame.time -e frame.protocols -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e frame.len -E separator=\\;`
+puts "tshark finished"
+puts "getting header"
 header_start = Time.new
 lines = result.rstrip.split(/\r?\n/).map {|line| line.chomp }
 # get header info from lines
@@ -78,10 +82,13 @@ lines.each do |line|
 end
 
 file_csv.close
+puts "header output finished"
 header_end = Time.new
 p header_end - header_start
 sql = "LOAD DATA LOCAL INFILE '#{@dirname}/data.csv' INTO TABLE `#{@table_name}` FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\\n'"
 @db.query(sql)
 end_time = Time.new
 
-p end_time - header_start
+puts "LOAD DATA TIME: #{end_time - header_end}"
+
+puts "TOTALEND: #{end_time - total_start}"

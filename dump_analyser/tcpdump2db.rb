@@ -58,16 +58,18 @@ sql = "CREATE TABLE `tcpdump`.`#{@table_name}` (`number` INT NOT NULL DEFAULT NU
 @db.query(sql)
 
 # run tshark from file and change output fields, store output to result
-# `tshark -r #{@filename} -T fields -e frame.time -e frame.protocols -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e frame.len -E separator=\\; > #{@dirname}/temp.txt;`
 puts "tshark_start"
-result = `tshark -r #{@filename} -T fields -e frame.time -e frame.protocols -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e frame.len -E separator=\\;`
+`tshark -r #{@filename} -T fields -e frame.time -e frame.protocols -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e frame.len -E separator=\\; > #{@dirname}/temp.txt;`
+
+#result = `tshark -r #{@filename} -T fields -e frame.time -e frame.protocols -e eth.src -e eth.dst -e ip.src -e ip.dst -e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport -e frame.len -E separator=\\;`
 puts "tshark finished"
 puts "getting header"
 header_start = Time.new
-lines = result.rstrip.split(/\r?\n/).map {|line| line.chomp }
+#lines = result.rstrip.split(/\r?\n/).map {|line| line.chomp }
+file_temp = File.open("#{@dirname}/temp.txt",'r')
 # get header info from lines
 file_csv = File.open("#{@dirname}/data.csv",'w')
-lines.each do |line|
+file_temp.each do |line|
   header = get_header(line)
   csv_line = 'NULL,'
   header.each do |key,value|
@@ -82,6 +84,7 @@ lines.each do |line|
 end
 
 file_csv.close
+file_temp.close
 puts "header output finished"
 header_end = Time.new
 p header_end - header_start
